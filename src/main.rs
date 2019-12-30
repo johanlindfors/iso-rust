@@ -17,12 +17,22 @@ struct MapData {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(remote = "Rectangle")]
-struct RectangleDef {
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32,
+struct Clip {
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
+impl Clip {
+    fn as_rectangle(&self) -> Rectangle {
+        Rectangle {
+            x: self.x as f32 * ISO_WIDTH,
+            y: self.y as f32 * ISO_HEIGHT, 
+            width: self.width as f32, 
+            height: self.height as f32
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -33,8 +43,7 @@ struct Point {
 
 #[derive(Serialize, Deserialize)]
 struct TileData {
-    #[serde(with = "RectangleDef")]
-    clip: Rectangle,
+    clip: Clip,
     origin: Point,
 }
 
@@ -50,41 +59,13 @@ impl Map {
         let texture = Texture::new(ctx, map_data.image).unwrap();
         
         let mut tiles = HashMap::new();
-        tiles.insert(0, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(0.0, 0.0, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(1, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(7.0 * ISO_WIDTH, 3.0 * ISO_HEIGHT, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(2, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(0.0, 0.0, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(3, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(8.0 * ISO_WIDTH, 3.0 * ISO_HEIGHT, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(4, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(0.0, 0.0, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(5, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(0.0, 0.0, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
-        tiles.insert(6, Tile {
-            texture: texture.clone(),
-            clip: Rectangle::new(0.0, 0.0, 64.0, 64.0),
-            origin: Vec2::new(0.0, 0.0),
-        });
+        for (index, tile) in map_data.tiles {
+            tiles.insert(index, Tile {
+                texture: texture.clone(),
+                clip: tile.clip.as_rectangle(),
+                origin: Vec2::new(0.0, 0.0),
+            });
+        }
         Self {
             map: map_data.map,
             tiles,
@@ -151,7 +132,7 @@ impl GameState {
         camera.set_viewport_size(640.0, 480.0);
         camera.update();
 
-        let map = Map::from_json(ctx, "./resources/map.json");
+        let map = Map::from_json(ctx, "./resources/lake.json");
 
         Ok(GameState {
             camera,
@@ -162,7 +143,7 @@ impl GameState {
 
 impl State for GameState {
     fn draw(&mut self, ctx: &mut Context) -> tetra::Result {
-        graphics::clear(ctx, Color::rgb(0.769, 0.812, 0.631));
+        graphics::clear(ctx, Color::rgb(0.0, 0.0, 0.0));
         graphics::set_transform_matrix(ctx, self.camera.as_matrix());
 
         for row in 0..6 {
