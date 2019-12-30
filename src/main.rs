@@ -13,7 +13,9 @@ struct MapData {
     tiles: HashMap<i32, TileData>,
     width: usize,
     height: usize,
-    map: [[i32; 6]; 6],
+    low: [[i32; 10]; 10],
+    mid: [[i32; 10]; 10],
+    high: [[i32; 10]; 10],
 }
 
 #[derive(Serialize, Deserialize)]
@@ -49,7 +51,9 @@ struct TileData {
 
 struct Map {    
     tiles: HashMap<i32, Tile>,
-    map: [[i32; 6]; 6],
+    low: [[i32; 10]; 10],
+    mid: [[i32; 10]; 10],
+    high: [[i32; 10]; 10],
 }
 
 impl Map {
@@ -63,11 +67,13 @@ impl Map {
             tiles.insert(index, Tile {
                 texture: texture.clone(),
                 clip: tile.clip.as_rectangle(),
-                origin: Vec2::new(0.0, 0.0),
+                origin: Vec2::new(tile.origin.x as f32, tile.origin.y as f32),
             });
         }
         Self {
-            map: map_data.map,
+            low: map_data.low,
+            mid: map_data.mid,
+            high: map_data.high,
             tiles,
         }
     }
@@ -146,13 +152,27 @@ impl State for GameState {
         graphics::clear(ctx, Color::rgb(0.0, 0.0, 0.0));
         graphics::set_transform_matrix(ctx, self.camera.as_matrix());
 
-        for row in 0..6 {
-            for col in 0..6 {
+        for row in 0..10 {
+            for col in 0..10 {
                 let x = (col * 32) as i32;
                 let y = (row * 32) as i32;
-                let tile_index = self.map.map[row][col];
-                let tile = &self.map.tiles[&tile_index];
-                tile.draw(ctx, x, y);
+                let tile_index = self.map.low[row][col];
+                if tile_index > 0 {
+                    let tile = &self.map.tiles[&tile_index];
+                    tile.draw(ctx, x, y);
+                }
+
+                let tile_index = self.map.mid[row][col];
+                if tile_index > 0 {
+                    let tile = &self.map.tiles[&tile_index];
+                    tile.draw(ctx, x, y);
+                }
+
+                let tile_index = self.map.high[row][col];
+                if tile_index > 0 {
+                    let tile = &self.map.tiles[&tile_index];
+                    tile.draw(ctx, x, y);
+                }
             }
         }
 
